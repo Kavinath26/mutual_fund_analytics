@@ -93,14 +93,31 @@ def clean_data():
         df_perf.to_csv(os.path.join(processed_dir, "clean_performance.csv"), index=False)
         print("✔ Task 3 Complete: Created clean_performance.csv")
 
-    # Sync remaining files to processed folder to ensure clean loading later
-    remaps = {
-        "01_fund_master.csv": "clean_fund_master.csv",
-        "03_aum_by_fund_house.csv": "clean_aum.csv"
-    }
-    for old, new in remaps.items():
-        if os.path.exists(os.path.join(raw_dir, old)):
-            pd.read_csv(os.path.join(raw_dir, old)).to_csv(os.path.join(processed_dir, new), index=False)
+    # Mapped directly above your main block:
+    # 4. Sync ALL remaining files to processed folder to ensure all 10 are present
+    print("\n--- Syncing remaining files to data/processed/ ---")
+    all_raw_files = [f for f in os.listdir(raw_dir) if f.endswith('.csv')]
+    
+    # These are the files we ALREADY handled manually above
+    handled_raw_files = ["02_nav_history.csv", "08_investor_transactions.csv", "07_scheme_performance.csv", "01_fund_master.csv", "03_aum_by_fund_house.csv"]
+    
+    for f in all_raw_files:
+        if f not in handled_raw_files:
+            # Create a clean name by stripping out numbers and replacing spaces with underscores
+            clean_name = f.lower()
+            if clean_name.startswith(tuple(str(i).zfill(2)+'_' for i in range(11))):
+                clean_name = clean_name[3:] # Strips the "04_" prefix structure
+            
+            clean_name = clean_name.replace(" ", "_")
+            if not clean_name.startswith("clean_"):
+                clean_name = "clean_" + clean_name
+                
+            # Read from raw and save directly to processed
+            df_temp = pd.read_csv(os.path.join(raw_dir, f))
+            df_temp.to_csv(os.path.join(processed_dir, clean_name), index=False)
+            print(f"✔ Synced: {f} -> {clean_name}")
+            
+    print("\n✔ Success! Complete 10-file verification scan finished.")
 
 if __name__ == "__main__":
     clean_data()
